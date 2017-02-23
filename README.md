@@ -6,43 +6,67 @@ AmazonCloudWatch Developer Guide - http://docs.aws.amazon.com/AmazonCloudWatch/l
 AWS SDK in Python Boto - https://github.com/boto/boto
 
 # Installation
-1. Install boto on zabbix server via pip.
-   * pip install boto
-   
-1. Find the metrics from AmazonCloudWatch Developer Guide and add metrics to the configuration file "conf/aws_services_metrics.conf".
+Install boto on zabbix server via pip.
+```
+pip install boto
+```
 
-2. Create a zabbix template for an AWS service, then create items with metrics key by using zabbix trapper type.
+Clone this repo to /opt/zabbix
+```
+git clone https://github.com/omni-lchen/zabbix-cloudwatch.git cloudwatch
+```
 
-   Sample templates can be found in "templates" folder.
+Customize `conf.d/crontab` to your settings where:
 
-  AWS Metric Zabbix Trapper Item Key Format without Discovery.
-  
-  Key: \<aws_service\>.\<metric\>.\<statistics\>
+1. `<*_Name>` : The name in AWS
+2. `<zabbix_host>` : The name of the host being monitored by Zabbix (not the Zabbix host)
+3. `<zabbix_server or zabbix_proxy>` : Tho host running the Zabbix Server backend
+4. `<aws_account>` : AWS Account number
+5. `<aws_region>` : i.e. `us-east-1`
 
-  AWS Metric Zabbix Trapper Item Key Format with Discovery.
-  
-  Key: \<aws_service\>.\<metric\>.\<statistics\>["\<aws_account\>","\<aws_region\>","\<discovery_item_value\>"]
+Customize `conf/awscreds` where:
 
-  DynamoDB Item Key Format is different from the standard setup, due to combinations of different dimensions and metrics.
-  
-  operations_all = ['GetItem', 'PutItem', 'Query', 'Scan', 'UpdateItem', 'DeleteItem', 'BatchGetItem', 'BatchWriteItem']
-  
-  operations_metrics = ['SuccessfulRequestLatency', 'SystemErrors', 'ThrottledRequests]
-  
-  DynamoDB Item Key1: DynamoDB.\<operations_all\>.\<operations_metrics\>.\<statistics\>["\<aws_account\>","\<aws_region\>","\<table_name\>"]
+1. `[aws_account_1]` : AWS Account number, i.e. `[<aws_account>]`
+2. `aws_access_key_id` : Get it from the AWS website
+3. `aws_secret_access_key` : Get it from the AWS website
 
-  operations_returned_item = ['Query', 'Scan']
-  
-  DynamoDB Item Key2: DynamoDB.\<operations_returned_item\>.ReturnedItemCount.\<statistics\>["\<aws_account\>","\<aws_region\>","\<table_name\>"]
+Customize the metrics you want to capture in `conf/aws_services_metrics.conf`. Find the metrics from [AmazonCloudWatch Developer Guide](http://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/supported_services.html).
 
-  DynamoDB Other Keys: DynamoDB.\<metric\>.\<statistics\>["\<aws_account\>","\<aws_region\>","\<table_name\>"]
+Test that the cron script you are running works:
+```
+./cron.RDS.sh "cool-server" "mydb.abs343jddvzu.us-east-1.rds.amazonaws.com" "localhost" "12345678901" "us-east-1"
+```
 
-3. Create a new host and linked with the template.
+In the `cron.d` folder, run `crontab crontab` - ** WARNING this will clear your personal crontab! **
 
-4. Create a cloudwatch bash wrapper script for cron job.
+Make sure the cron job is being run with no errors in `syslog`.
 
-   Sample cron jobs can be found in "cron.d" folder.
+Import `template\*` into Zabbix via the website. (It's as simple as it sounds)
 
-5. Create a new cron job to send the cloudwatch metrics to the host.
+Finally, associate an imported template with a host, which must match the name `<zabbix_host>`
 
-   Sample crontab can be found in "cron.d" folder.
+### Advanced Help
+Example AWS Metric Zabbix Trapper Item Key Format without Discovery.
+```  
+Key: \<aws_service\>.\<metric\>.\<statistics\>
+```
+
+Example AWS Metric Zabbix Trapper Item Key Format with Discovery.
+```  
+Key: \<aws_service\>.\<metric\>.\<statistics\>["\<aws_account\>","\<aws_region\>","\<discovery_item_value\>"]
+```
+
+DynamoDB Item Key Format is different from the standard setup, due to combinations of different dimensions and metrics.
+```  
+operations_all = ['GetItem', 'PutItem', 'Query', 'Scan', 'UpdateItem', 'DeleteItem', 'BatchGetItem', 'BatchWriteItem']
+operations_metrics = ['SuccessfulRequestLatency', 'SystemErrors', 'ThrottledRequests]
+```
+
+DynamoDB Item Key1: `DynamoDB.\<operations_all\>.\<operations_metrics\>.\<statistics\>["\<aws_account\>","\<aws_region\>","\<table_name\>"]`
+```
+operations_returned_item = ['Query', 'Scan']
+```  
+
+DynamoDB Item Key2: `DynamoDB.\<operations_returned_item\>.ReturnedItemCount.\<statistics\>["\<aws_account\>","\<aws_region\>","\<table_name\>"]`
+
+DynamoDB Other Keys: `DynamoDB.\<metric\>.\<statistics\>["\<aws_account\>","\<aws_region\>","\<table_name\>"]`
