@@ -10,7 +10,7 @@ Install boto on zabbix server via pip.
 ```
 pip install boto
 ```
-
+   
 Clone this repo to /opt/zabbix
 ```
 git clone https://github.com/omni-lchen/zabbix-cloudwatch.git cloudwatch
@@ -25,24 +25,24 @@ Customize `conf.d/crontab` to your settings where:
 5. `<aws_region>` : i.e. `us-east-1`
 
 Customize `conf/awscreds` where:
-
+  
 1. `[aws_account_1]` : AWS Account number, i.e. `[<aws_account>]`
 2. `aws_access_key_id` : Get it from the AWS website
 3. `aws_secret_access_key` : Get it from the AWS website
 
 Customize the metrics you want to capture in `conf/aws_services_metrics.conf`. Find the metrics from [AmazonCloudWatch Developer Guide](http://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/supported_services.html).
-
+  
 Test that the cron script you are running works:
 ```
 ./cron.RDS.sh "cool-server" "mydb.abs343jddvzu.us-east-1.rds.amazonaws.com" "localhost" "12345678901" "us-east-1"
 ```
 
 In the `cron.d` folder, run `crontab crontab` - ** WARNING this will clear your personal crontab! **
-
+  
 Make sure the cron job is being run with no errors in `syslog`.
-
+  
 Import `template\*` into Zabbix via the website. (It's as simple as it sounds)
-
+  
 Finally, associate an imported template with a host, which must match the name `<zabbix_host>`
 
 ### Advanced Help
@@ -50,7 +50,7 @@ Example AWS Metric Zabbix Trapper Item Key Format without Discovery.
 ```  
 Key: \<aws_service\>.\<metric\>.\<statistics\>
 ```
-
+  
 Example AWS Metric Zabbix Trapper Item Key Format with Discovery.
 ```  
 Key: \<aws_service\>.\<metric\>.\<statistics\>["\<aws_account\>","\<aws_region\>","\<discovery_item_value\>"]
